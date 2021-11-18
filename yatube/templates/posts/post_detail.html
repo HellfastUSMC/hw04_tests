@@ -1,0 +1,44 @@
+{% extends 'base.html' %}
+{% block title %}{{ title }}{% endblock title %}
+{% block content %}
+<div class="row">
+        <aside class="col-12 col-md-3">
+          <ul class="list-group list-group-flush">
+            <li class="list-group-item">
+              Дата публикации: {{ date|date:"d E Y" }} 
+            </li>
+            {% if group %}
+              <li class="list-group-item">
+                Группа: {{ group }}
+                <a href="{% url 'posts:group_list' group.slug %}">
+                  все записи группы
+                </a>
+              </li>
+              {% endif %}
+              <li class="list-group-item">
+                Автор: {{ author }}
+              </li>
+              <li class="list-group-item d-flex justify-content-between align-items-center">
+              Всего постов автора:  <span >{{ posts_count }}</span>
+            </li>
+            <li class="list-group-item">
+              <a href="{% url 'posts:profile' username %}">
+                все посты пользователя
+              </a>
+            </li>
+            {% if request.user == post_author %}
+              <li class="list-group-item">
+                <a href="{% url 'posts:post_edition' post_id %}">
+                  редактировать пост
+                </a>
+              </li>
+          {% endif %}
+          </ul>
+        </aside>
+        <article class="col-12 col-md-9">
+          <p>
+           {{ text|safe }}
+          </p>
+        </article>
+      </div> 
+{% endblock content %}
