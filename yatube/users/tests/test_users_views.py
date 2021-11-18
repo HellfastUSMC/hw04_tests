@@ -24,8 +24,8 @@ class TestV(TestCase):
             'users:password_change_done': 'users/password_change_done.html',
             'users:password_reset_form': 'users/password_reset_form.html',
             'users:password_reset_done': 'users/password_reset_done.html',
-            # reverse('users:password_reset_confirm'): 'users/password_reset_confirm.html', uidb64, token???
-            'users:password_reset_complete': 'users/password_reset_complete.html',
+            'users:password_reset_complete':
+                'users/password_reset_complete.html',
             'users:logout': 'users/logged_out.html',
         }
 
@@ -35,13 +35,16 @@ class TestV(TestCase):
             'last_name': forms.CharField,
             'email': forms.CharField,
         }
-        
-        print('Start testing sign up form in users...')
+
+        print('Start testing sign up form fields in users...')
         response = self.auth_cl.get(reverse('users:signup'))
         for field, f_type in users_form_fields.items():
             with self.subTest(field=field):
-                self.assertIsInstance(response.context['form'].fields.get(field), f_type)
-        print('Done testing sign up form in users!')
+                self.assertIsInstance(
+                    response.context['form'].fields.get(field),
+                    f_type
+                )
+        print('Done testing sign up form fields in users!')
 
         print('Start testing views templates in users...')
         for reverse_name, template in templates.items():

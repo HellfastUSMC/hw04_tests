@@ -103,15 +103,19 @@ class TestV(TestCase):
 
         templates = {
             reverse('posts:index'): 'posts/index.html',
-            reverse('posts:group_list', kwargs={'slug': f'{local_gr_slug}'}):
-            'posts/group_list.html',
-            reverse('posts:post_detail', kwargs={'post_id': f'{local_post_id}'}):
-            'posts/post_detail.html',
-            reverse('posts:profile', kwargs={'username': f'{local_username}'}):
-            'posts/profile.html',
+            reverse('posts:group_list',
+                    kwargs={'slug': f'{local_gr_slug}'}):
+                        'posts/group_list.html',
+            reverse('posts:post_detail',
+                    kwargs={'post_id': f'{local_post_id}'}):
+                        'posts/post_detail.html',
+            reverse('posts:profile',
+                    kwargs={'username': f'{local_username}'}):
+                        'posts/profile.html',
             reverse('posts:post_create'): 'posts/create_post.html',
-            reverse('posts:post_edition', kwargs={'post_id': f'{local_post_id}'}):
-            'posts/create_post.html',
+            reverse('posts:post_edition',
+                    kwargs={'post_id': f'{local_post_id}'}):
+                        'posts/create_post.html',
         }
 
         post_form_fields = {
@@ -128,61 +132,137 @@ class TestV(TestCase):
                 self.assertTemplateUsed(response, template)
         print('Done testing views templates in posts!')
 
+        print('Start testing index page post obj in posts...')
         response = self.auth_cl.get(reverse('posts:index'))
         post_el = response.context.get('page_obj')[0]
         self.assertEqual(post_el.pk, self.post12.pk)
         self.assertEqual(post_el.text, self.post12.text)
         self.assertEqual(post_el.author, self.post12.author)
         self.assertEqual(post_el.group, self.post12.group)
+        print('Done testing index page post obj in posts!')
 
+        print('Start testing index page posts amount in posts...')
         self.assertEqual(len(response.context['page_obj'].object_list), 10)
+        print('Done testing index page posts amount in posts!')
 
+        print('Start testing index second page posts amount in posts...')
         response = self.auth_cl.get(reverse('posts:index') + '?page=2')
         self.assertEqual(len(response.context['page_obj'].object_list), 3)
+        print('Done testing index second page posts amount in posts!')
 
-        response = self.auth_cl.get(reverse('posts:group_list', kwargs={'slug': f'{local_gr_slug}'}))
+        print('Start testing group page post obj in posts...')
+        response = self.auth_cl.get(
+            reverse(
+                'posts:group_list',
+                kwargs={'slug': f'{local_gr_slug}'}
+            )
+        )
         post_el = response.context.get('page_obj')[0]
         self.assertEqual(post_el.pk, self.post12.pk)
         self.assertEqual(post_el.text, self.post12.text)
         self.assertEqual(post_el.author, self.post12.author)
         self.assertEqual(post_el.group, self.post12.group)
+        print('Done testing group page post obj in posts!')
 
+        print('Start testing group page posts amount in posts...')
         self.assertEqual(len(response.context['page_obj'].object_list), 10)
+        print('Done testing group page posts amount in posts!')
 
+        print('Start testing group second page posts amount in posts...')
+        response = self.auth_cl.get(
+            reverse(
+                'posts:group_list',
+                kwargs={'slug': f'{local_gr_slug}'}
+            ) + '?page=2'
+        )
+        self.assertEqual(len(response.context['page_obj'].object_list), 1)
+        print('Done testing group second page posts amount in posts!')
+
+        print(
+            'Start testing group posts for affilation with group in posts...'
+        )
         for post in response.context.get('page_obj'):
             self.assertEqual(post.group, local_group)
+        print(
+            'Done testing group posts for affilation with group in posts!'
+        )
 
-        response = self.auth_cl.get(reverse('posts:group_list', kwargs={'slug': f'{local_gr_slug}'}) + '?page=2')
-        self.assertEqual(len(response.context['page_obj'].object_list), 1)
-
-        response = self.auth_cl.get(reverse('posts:profile', kwargs={'username': f'{local_username}'}))
+        print('Start testing profile page post obj in posts...')
+        response = self.auth_cl.get(
+            reverse(
+                'posts:profile',
+                kwargs={'username': f'{local_username}'}
+            )
+        )
         post_el = response.context.get('page_obj')[0]
         self.assertEqual(post_el.pk, self.post12.pk)
         self.assertEqual(post_el.text, self.post12.text)
         self.assertEqual(post_el.author, self.post12.author)
         self.assertEqual(post_el.group, self.post12.group)
+        print('Done testing profile page post obj in posts!')
 
+        print(
+            'Start testing profile posts for affilation with user in posts...'
+        )
         for post in response.context.get('page_obj'):
             self.assertEqual(post.author, local_user)
+        print(
+            'Done testing profile posts for affilation with user in posts!'
+        )
 
+        print('Start testing profile page posts amount in posts...')
         self.assertEqual(len(response.context['page_obj'].object_list), 10)
+        print('Done testing profile page posts amount in posts!')
 
-        response = self.auth_cl.get(reverse('posts:profile', kwargs={'username': f'{local_username}'}) + '?page=2')
+        print('Start testing profile second page posts amount in posts...')
+        response = self.auth_cl.get(
+            reverse(
+                'posts:profile',
+                kwargs={'username': f'{local_username}'}
+            ) + '?page=2'
+        )
         self.assertEqual(len(response.context['page_obj'].object_list), 2)
+        print('Done testing profile second page posts amount in posts!')
 
-        response = self.auth_cl.get(reverse('posts:post_detail', kwargs={'post_id': f'{local_post_id}'}))
+        print(
+            'Start testing detail post page for post_id==post.pk in posts...'
+        )
+        response = self.auth_cl.get(
+            reverse(
+                'posts:post_detail',
+                kwargs={'post_id': f'{local_post_id}'}
+            )
+        )
         post_el = response.context.get('post')
         self.assertEqual(post_el.pk, self.post12.pk)
         self.assertEqual(post_el.text, self.post12.text)
         self.assertEqual(post_el.author, self.post12.author)
         self.assertEqual(post_el.group, self.post12.group)
+        print(
+            'Done testing detail post page for post_id==post.pk in posts!'
+        )
 
+        print('Start testing post create page form fields in posts...')
         response = self.auth_cl.get(reverse('posts:post_create'))
         for field, f_type in post_form_fields.items():
             with self.subTest(field=field):
-                self.assertIsInstance(response.context['form'].fields.get(field), f_type)
+                self.assertIsInstance(
+                    response.context['form'].fields.get(field),
+                    f_type
+                )
+        print('Start testing post create page form fields in posts...')
 
-        response = self.auth_cl.get(reverse('posts:post_edition', kwargs={'post_id': f'{local_post_id}'}))
+        print('Start testing post edit page form fields in posts...')
+        response = self.auth_cl.get(
+            reverse(
+                'posts:post_edition',
+                kwargs={'post_id': f'{local_post_id}'}
+            )
+        )
         for field, f_type in post_form_fields.items():
             with self.subTest(field=field):
-                self.assertIsInstance(response.context['form'].fields.get(field), f_type)
+                self.assertIsInstance(
+                    response.context['form'].fields.get(field),
+                    f_type
+                )
+        print('Start testing post edit page form fields in posts...')

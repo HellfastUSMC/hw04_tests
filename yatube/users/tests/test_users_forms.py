@@ -1,9 +1,7 @@
-from django import forms
 from django.contrib.auth import get_user_model
 from django.test import TestCase, Client
 from django.urls import reverse
 
-from posts.forms import PostForm
 
 user = get_user_model()
 
@@ -28,7 +26,11 @@ class TestF(TestCase):
         }
 
         print('Start testing sign up form and redirect on success...')
-        response = self.cl.post(reverse('users:signup'), data=signup_form, follow=True)
+        response = self.cl.post(
+            reverse('users:signup'),
+            data=signup_form,
+            follow=True
+        )
         new_user = user.objects.get(pk=1)
         self.assertEqual(signup_form['username'], new_user.username)
         print('User created!')
