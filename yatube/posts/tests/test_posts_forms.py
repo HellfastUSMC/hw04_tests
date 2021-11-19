@@ -19,14 +19,17 @@ class TestF(TestCase):
             slug='VTG',
             description='VDESC'
         )
+        cls.test_post = Post.objects.create(
+            text='TEST EDIT TEXT',
+            group=cls.group,
+            author=cls.user
+        )
+        cls.cl = Client()
+        cls.cl.force_login(cls.user)
+        cls.cl2 = Client()
+        cls.cl2.force_login(cls.user2)
 
-    def test_posts_views(self):
-
-        self.cl = Client()
-        self.cl.force_login(self.user)
-        self.anon_cl = Client()
-        self.cl2 = Client()
-        self.cl2.force_login(self.user2)
+    def test_post_create(self):
 
         local_username = self.user.username
         local_group = self.group
@@ -42,32 +45,62 @@ class TestF(TestCase):
             data=post_form,
             follow=True
         )
-        post_entry = Post.objects.get(pk=1)
+        post_entry = Post.objects.latest('pk')
         self.assertEqual(post_form['text'], post_entry.text)
+        self.assertEqual(local_group, post_entry.group)
         print('Post created!')
         self.assertRedirects(
             response,
             reverse('posts:profile', kwargs={'username': f'{local_username}'})
         )
+
+        post_on_profile_page = response.context.get('page_obj')[0]
+        self.assertEqual(
+            post_entry.pk,
+            post_on_profile_page.pk
+        )
         print('Redirect working!')
-        print('Done testing post create form and redirect on success!')
+
+        response = self.client.get(
+            reverse(
+                'posts:group_list',
+                kwargs={'slug': f'{local_group.slug}'}
+            )
+        )
+
+        post_on_group_page = response.context.get('page_obj')[0]
+        self.assertEqual(
+            post_entry.pk,
+            post_on_group_page.pk
+        )
+
+        response = self.client.get(reverse('posts:index'))
+
+        post_on_index_page = response.context.get('page_obj')[0]
+        self.assertEqual(
+            post_entry.pk,
+            post_on_index_page.pk
+        )
+
+    def test_post_edit(self):
+        
+        local_group = self.group
 
         print('Start testing post edit form and redirect on success...')
         response = self.cl.post(
             reverse(
                 'posts:post_edition',
-                kwargs={'post_id': f'{post_entry.pk}'}
+                kwargs={'post_id': f'{self.test_post.pk}'}
             ),
             data={'text': 'CHANGED!'}, follow=True
         )
-        changed_post = Post.objects.get(pk=1)
-        self.assertEqual('CHANGED!', changed_post.text)
+        self.assertEqual('CHANGED!', self.test_post.text)
         print('Post edited!')
         self.assertRedirects(
             response,
             reverse(
                 'posts:post_detail',
-                kwargs={'post_id': f'{post_entry.pk}'}
+                kwargs={'post_id': f'{self.test_post.pk}'}
             )
         )
         print('Redirect working!')
@@ -80,7 +113,7 @@ class TestF(TestCase):
         response = self.cl2.post(
             reverse(
                 'posts:post_edition',
-                kwargs={'post_id': f'{post_entry.pk}'}
+                kwargs={'post_id': f'{self.test_post.pk}'}
             ),
             data={'text': 'Some new text', 'group': local_group.pk},
             follow=True
@@ -91,7 +124,7 @@ class TestF(TestCase):
             response,
             reverse(
                 'posts:post_detail',
-                kwargs={'post_id': f'{post_entry.pk}'}
+                kwargs={'post_id': f'{self.test_post.pk}'}
             )
         )
         print('Redirect working!')
