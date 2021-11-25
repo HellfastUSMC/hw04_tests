@@ -39,7 +39,6 @@ class TestF(TestCase):
             'group': local_group.pk,
         }
 
-        print('Start testing post create form and redirect on success...')
         response = self.cl.post(
             reverse('posts:post_create'),
             data=post_form,
@@ -48,7 +47,6 @@ class TestF(TestCase):
         post_entry = Post.objects.latest('pk')
         self.assertEqual(post_form['text'], post_entry.text)
         self.assertEqual(local_group, post_entry.group)
-        print('Post created!')
         self.assertRedirects(
             response,
             reverse('posts:profile', kwargs={'username': f'{local_username}'})
@@ -59,7 +57,6 @@ class TestF(TestCase):
             post_entry.pk,
             post_on_profile_page.pk
         )
-        print('Redirect working!')
 
         response = self.client.get(
             reverse(
@@ -84,7 +81,6 @@ class TestF(TestCase):
 
     def test_post_edit(self):
 
-        print('Start testing post edit form and redirect on success...')
         response = self.cl.post(
             reverse(
                 'posts:post_edition',
@@ -101,16 +97,7 @@ class TestF(TestCase):
             )
         )
         changed_post = Post.objects.get(pk=self.test_post.pk)
-        print(changed_post.text)
         self.assertEqual('CHANGED!', changed_post.text)
-        print('Post edited!')
-        print('Redirect working!')
-        print('Done testing post edit form and redirect on success!')
-
-        print(
-            'Start testing post edit form with '
-            'another user and redirect to view...'
-        )
 
     def test_post_edit_diff_user(self):
 
@@ -125,18 +112,12 @@ class TestF(TestCase):
             follow=True
         )
         self.assertEqual('TEST EDIT TEXT', self.test_post.text)
-        print('Post is not edited!')
         self.assertRedirects(
             response,
             reverse(
                 'posts:post_detail',
                 kwargs={'post_id': f'{self.test_post.pk}'}
             )
-        )
-        print('Redirect working!')
-        print(
-            'Done testing post edit form with '
-            'another user and redirect to view!'
         )
 
         response = self.client.post(
@@ -148,8 +129,3 @@ class TestF(TestCase):
             follow=True
         )
         self.assertEqual('TEST EDIT TEXT', self.test_post.text)
-        print('Post is not edited!')
-        self.assertRedirects(
-            response,
-            reverse('users:login', args=('?next=/posts/1/edit/',)) # HERE!!!!!!!!!!!!!!!!!
-        )

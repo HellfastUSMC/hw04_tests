@@ -2,6 +2,8 @@ from django.contrib.auth import get_user_model
 from django.test import TestCase, Client
 from http import HTTPStatus
 
+from django.urls.base import reverse
+
 from ..models import Post, Group
 
 user = get_user_model()
@@ -24,32 +26,23 @@ class TestU(TestCase):
             slug='UTG',
             description='UDESC',
         )
+        cls.auth_cl = Client()
+        cls.auth_cl.force_login(TestU.user)
+        cls.non_author_cl = Client()
+        cls.non_author_cl.force_login(TestU.user_non_author)
 
-    def test_posts_urls(self):
-
-        self.auth_cl = Client()
-        self.auth_cl.force_login(TestU.user)
-        self.anon_cl = Client()
-        self.non_author_cl = Client()
-        self.non_author_cl.force_login(TestU.user_non_author)
-
-        local_gr_slug = TestU.group.slug
-        local_post_id = TestU.post.pk
-        local_username = TestU.user.username
-
-        templates = {
+        cls.templates = {
             '/': 'posts/index.html',
-            f'/group/{local_gr_slug}/': 'posts/group_list.html',
-            f'/posts/{local_post_id}/': 'posts/post_detail.html',
-            f'/profile/{local_username}/': 'posts/profile.html',
+            f'/group/{cls.group.slug}/': 'posts/group_list.html',
+            f'/posts/{cls.post.pk}/': 'posts/post_detail.html',
+            f'/profile/{cls.user.username}/': 'posts/profile.html',
             '/create/': 'posts/create_post.html',
-            f'/posts/{local_post_id}/edit/': 'posts/create_post.html',
+            f'/posts/{cls.post.pk}/edit/': 'posts/create_post.html',
         }
 
-        print('Start testing posts urls...')
+    def test_posts_urls_auth_user(self):
 
-        print('Start testing posts urls templates...')
-        for adress, template in templates.items():
+        for adress, template in self.templates.items():
             with self.subTest(adress=adress):
                 response = self.auth_cl.get(adress)
                 self.assertTemplateUsed(
@@ -57,29 +50,33 @@ class TestU(TestCase):
                     template,
                     f"There's problem in {template} with adress - {adress}"
                 )
-        print('Done testing posts urls templates!')
 
-        print('Start testing create post for authed user...')
-        response = self.auth_cl.get('/create/')
+    def test_post_create_and_edit(self):
+
+        response = self.auth_cl.get(reverse('posts:post_create'))
         self.assertEqual(
             response.reason_phrase,
             'OK',
             f'Wrong status - {response.status_code} {response.reason_phrase},'
             f'{HTTPStatus(response.status_code).description}'
         )
-        print('Done testing create post for authed user!')
 
-        print('Start testing edit post for author user...')
-        response = self.auth_cl.get(f'/posts/{local_post_id}/edit/')
+        response = self.auth_cl.get(
+            reverse(
+                'posts:post_edition',
+                kwargs={'post_id': f'{self.post.pk}'}
+            )
+        )
+
         self.assertEqual(
             response.reason_phrase,
             'OK',
             f'Wrong status - {response.status_code} {response.reason_phrase},'
             f'{HTTPStatus(response.status_code).description}'
         )
-        print('Done testing create post for author user!')
 
-        print('Start testing 404 page...')
+    def test_404_page(self):
+
         response = self.auth_cl.get('/wrong_page_404/')
         self.assertEqual(
             response.reason_phrase,
@@ -87,28 +84,36 @@ class TestU(TestCase):
             f'Wrong status - {response.status_code} {response.reason_phrase},'
             f'{HTTPStatus(response.status_code).description}'
         )
-        print('Done testing 404 page!')
 
-        print('Start testing create page redirect for anon user...')
-        response = self.anon_cl.get('/create/')
+    def test_redirects_for_users(self):
+
+        response = self.client.get(reverse('posts:post_create'))
         self.assertRedirects(
             response,
             '/auth/login/?next=/create/'
         )
-        print('Done testing create page redirect for anon user!')
 
-        print('Start testing edit post page redirect for anon user...')
-        response = self.anon_cl.get(f'/posts/{local_post_id}/edit/')
+        response = self.client.get(
+            reverse(
+                'posts:post_edition',
+                kwargs={'post_id': f'{self.post.pk}'}
+            )
+        )
         self.assertRedirects(
             response,
-            f'/auth/login/?next=/posts/{local_post_id}/edit/'
+            f'/auth/login/?next=/posts/{self.post.pk}/edit/'
         )
-        print('Done testing edit post page redirect for anon user!')
 
-        print('Start testing edit post page redirect for non author user...')
-        response = self.non_author_cl.get(f'/posts/{local_post_id}/edit/')
+        response = self.non_author_cl.get(
+            reverse(
+                'posts:post_edition',
+                kwargs={'post_id': f'{self.post.pk}'}
+            )
+        )
         self.assertRedirects(
             response,
-            f'/posts/{local_post_id}/'
+            reverse(
+                'posts:post_detail',
+                kwargs={'post_id': f'{self.post.pk}'}
+            )
         )
-        print('Done testing edit post page redirect for non author user!')
