@@ -23,56 +23,14 @@ class TestV(TestCase):
             slug='VTG',
             description='VDESC'
         )
-        cls.post1 = Post.objects.create(
-            author=cls.user,
-            text='V TEST POST ' * 3,
-            group=cls.group,
-        )
-        cls.post2 = Post.objects.create(
-            author=cls.user,
-            text='V TEST POST ' * 3,
-            group=cls.group,
-        )
-        cls.post3 = Post.objects.create(
-            author=cls.user,
-            text='V TEST POST ' * 3,
-            group=cls.group,
-        )
-        cls.post4 = Post.objects.create(
-            author=cls.user,
-            text='V TEST POST ' * 3,
-            group=cls.group,
-        )
-        cls.post5 = Post.objects.create(
-            author=cls.user,
-            text='V TEST POST ' * 3,
-            group=cls.group,
-        )
-        cls.post6 = Post.objects.create(
-            author=cls.user,
-            text='V TEST POST ' * 3,
-            group=cls.group,
-        )
-        cls.post7 = Post.objects.create(
-            author=cls.user,
-            text='V TEST POST ' * 3,
-            group=cls.group,
-        )
-        cls.post8 = Post.objects.create(
-            author=cls.user,
-            text='V TEST POST ' * 3,
-            group=cls.group,
-        )
-        cls.post9 = Post.objects.create(
-            author=cls.user,
-            text='V TEST POST ' * 3,
-            group=cls.group,
-        )
-        cls.post10 = Post.objects.create(
-            author=cls.user,
-            text='V TEST POST ' * 3,
-            group=cls.group,
-        )
+
+        for i in range(10):
+            Post.objects.create(
+                author=cls.user,
+                text='V TEST POST ' * 3,
+                group=cls.group,
+            )
+
         cls.post13 = Post.objects.create(
             author=cls.user_2,
             text='V TEST POST ' * 3,

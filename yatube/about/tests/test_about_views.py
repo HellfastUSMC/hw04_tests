@@ -18,9 +18,7 @@ class TestU(TestCase):
             reverse('about:author'): 'about/author.html',
         }
 
-        print('Start testing views templates in about...')
         for reverse_name, template in templates.items():
             with self.subTest(reverse_name=reverse_name):
                 response = self.cl.get(reverse_name)
                 self.assertTemplateUsed(response, template)
-        print('Done testing views templates in about!')

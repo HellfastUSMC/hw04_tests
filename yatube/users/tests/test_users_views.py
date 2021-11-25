@@ -36,7 +36,6 @@ class TestV(TestCase):
             'email': forms.CharField,
         }
 
-        print('Start testing sign up form fields in users...')
         response = self.auth_cl.get(reverse('users:signup'))
         for field, f_type in users_form_fields.items():
             with self.subTest(field=field):
@@ -44,11 +43,8 @@ class TestV(TestCase):
                     response.context['form'].fields.get(field),
                     f_type
                 )
-        print('Done testing sign up form fields in users!')
 
-        print('Start testing views templates in users...')
         for reverse_name, template in templates.items():
             with self.subTest(reverse_name=reverse_name):
                 response = self.auth_cl.get(reverse(reverse_name))
                 self.assertTemplateUsed(response, template)
-        print('Done testing views templates in users!')
