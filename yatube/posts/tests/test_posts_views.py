@@ -70,8 +70,6 @@ class TestV(TestCase):
             'text': forms.CharField,
         }
 
-        
-
     def post_check(self, response, is_post):
         if not is_post:
             post_el = response.context.get('page_obj')[0]
