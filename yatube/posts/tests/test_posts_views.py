@@ -3,7 +3,6 @@ from django.conf import settings
 from django.contrib.auth import get_user_model
 from django.test import TestCase, Client
 from django.urls import reverse
-from time import sleep
 
 from ..models import Post, Group
 
@@ -39,19 +38,16 @@ class TestV(TestCase):
             author=cls.user,
             text='V TEST POST ' * 3,
         )
-        sleep(0.1)
-        # Бывают случаи что посты
-        # выше (post13, post11) создаются позже последнего
-        cls.post12 = Post.objects.create(
-            author=cls.user,
-            text='V TEST POST ' * 3,
-            group=cls.group,
-        )
         cls.auth_cl = Client()
         cls.auth_cl.force_login(TestV.user)
         cls.auth_another = Client()
         cls.auth_another.force_login(TestV.user_2)
 
+        cls.post12 = Post.objects.create(
+            author=cls.user,
+            text='V TEST POST ' * 3,
+            group=cls.group,
+        )
         cls.templates = {
             reverse('posts:index'): 'posts/index.html',
             reverse('posts:group_list',
@@ -73,6 +69,8 @@ class TestV(TestCase):
             'group': forms.ModelChoiceField,
             'text': forms.CharField,
         }
+
+        
 
     def post_check(self, response, is_post):
         if not is_post:
