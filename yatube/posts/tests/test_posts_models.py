@@ -20,76 +20,96 @@ class TestM(TestCase):
             author=cls.user,
             text='TEST POST ' * 10,
         )
+        cls.group_fields = {
+            'title': cls.group.title,
+            'slug': cls.group.slug,
+            'description': cls.group.description,
+        }
+        cls.group_verbose_fields = {
+            'title': cls.group._meta.get_field('title').verbose_name,
+            'slug': cls.group._meta.get_field('slug').verbose_name,
+            'description':
+                cls.group._meta.get_field('description').verbose_name,
+        }
+        cls.group_help_fields = {
+            'title': cls.group._meta.get_field('title').help_text,
+            'slug': cls.group._meta.get_field('slug').help_text,
+            'description': cls.group._meta.get_field('description').help_text,
+        }
+
+        cls.post_fields = {
+            'author': cls.post.author,
+            'group': cls.post.group,
+            'text': cls.post.text,
+            'pub_date': cls.post.pub_date,
+        }
+        cls.post_verbose_fields = {
+            'author': cls.post._meta.get_field('author').verbose_name,
+            'group': cls.post._meta.get_field('group').verbose_name,
+            'text': cls.post._meta.get_field('text').verbose_name,
+            'pub_date': cls.post._meta.get_field('pub_date').verbose_name,
+        }
+        cls.post_help_fields = {
+            'author': cls.post._meta.get_field('author').help_text,
+            'group': cls.post._meta.get_field('group').help_text,
+            'text': cls.post._meta.get_field('text').help_text,
+            'pub_date': cls.post._meta.get_field('pub_date').help_text,
+        }
 
     def test_objects_names(self):
         group_obj = Group.objects.latest('pk')
         title = group_obj.title
-        slug = group_obj.slug
-        desc = group_obj.description
         g_str = group_obj.__str__()
 
-        self.assertEqual(title, self.group.title, 'title группы неверный')
-        self.assertEqual(slug, self.group.slug, 'slug группы неверный')
-        self.assertEqual(desc, self.group.description, 'desc группы неверный')
-        self.assertEqual(
-            group_obj._meta.get_field('title').verbose_name,
-            self.group._meta.get_field('title').verbose_name,
-            'title.verbose_name группы неверный'
-        )
-        self.assertEqual(
-            group_obj._meta.get_field('title').help_text,
-            self.group._meta.get_field('title').help_text,
-            'title.help_text группы неверный'
-        )
-        self.assertEqual(
-            group_obj._meta.get_field('slug').verbose_name,
-            self.group._meta.get_field('slug').verbose_name,
-            'slug.verbose_name группы неверный'
-        )
-        self.assertEqual(
-            group_obj._meta.get_field('slug').help_text,
-            self.group._meta.get_field('slug').help_text,
-            'slug.help_text группы неверный'
-        )
-        self.assertEqual(
-            group_obj._meta.get_field('description').verbose_name,
-            self.group._meta.get_field('description').verbose_name,
-            'description.verbose_name группы неверный'
-        )
-        self.assertEqual(
-            group_obj._meta.get_field('description').help_text,
-            self.group._meta.get_field('description').help_text,
-            'description.help_text группы неверный'
-        )
+        for field_name, value in self.group_fields.items():
+            with self.subTest(field_name=field_name):
+                self.assertEqual(
+                    value,
+                    getattr(group_obj, field_name),
+                    f'{field_name} группы неверный'
+                )
+
+        for field_name, value in self.group_verbose_fields.items():
+            with self.subTest(field_name=field_name):
+                self.assertEqual(
+                    value,
+                    group_obj._meta.get_field(field_name).verbose_name,
+                    f'Verbose name {field_name} группы неверный'
+                )
+        for field_name, value in self.group_help_fields.items():
+            with self.subTest(field_name=field_name):
+                self.assertEqual(
+                    value,
+                    group_obj._meta.get_field(field_name).help_text,
+                    f'Help text {field_name} группы неверный'
+                )
         self.assertEqual(g_str, title, '__str__ группы неверный')
 
     def test_post_model(self):
 
         post_obj = Post.objects.latest('pk')
-        author = post_obj.author
-        text = post_obj.text
+        compare_to_str = post_obj.text[:15]
         p_str = post_obj.__str__()
 
-        self.assertEqual(author, TestM.user, 'user поста неверный')
-        self.assertEqual(text, self.post.text, 'text поста неверный')
-        self.assertEqual(
-            post_obj._meta.get_field('text').verbose_name,
-            self.post._meta.get_field('text').verbose_name,
-            'text.verbose_name поста неверный'
-        )
-        self.assertEqual(
-            post_obj._meta.get_field('text').help_text,
-            self.post._meta.get_field('text').help_text,
-            'text.help_text поста неверный'
-        )
-        self.assertEqual(
-            post_obj._meta.get_field('group').verbose_name,
-            self.post._meta.get_field('group').verbose_name,
-            'group.verbose_name поста неверный'
-        )
-        self.assertEqual(
-            post_obj._meta.get_field('group').help_text,
-            self.post._meta.get_field('group').help_text,
-            'group.help_text поста неверный'
-        )
-        self.assertEqual(p_str, text[:15], '__str__ поста неверный')
+        for field_name, value in self.post_fields.items():
+            with self.subTest(field_name=field_name):
+                self.assertEqual(
+                    value,
+                    getattr(post_obj, field_name),
+                    f'{field_name} поста неверный'
+                )
+        for field_name, value in self.post_verbose_fields.items():
+            with self.subTest(field_name=field_name):
+                self.assertEqual(
+                    value,
+                    post_obj._meta.get_field(field_name).verbose_name,
+                    f'Verbose name {field_name} группы неверный'
+                )
+        for field_name, value in self.post_help_fields.items():
+            with self.subTest(field_name=field_name):
+                self.assertEqual(
+                    value,
+                    post_obj._meta.get_field(field_name).help_text,
+                    f'Help text {field_name} группы неверный'
+                )
+        self.assertEqual(p_str, compare_to_str, '__str__ поста неверный')

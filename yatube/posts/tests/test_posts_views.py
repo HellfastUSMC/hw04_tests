@@ -40,6 +40,8 @@ class TestV(TestCase):
             text='V TEST POST ' * 3,
         )
         sleep(0.1)
+        # Бывают случаи что посты
+        # выше (post13, post11) создаются позже последнего
         cls.post12 = Post.objects.create(
             author=cls.user,
             text='V TEST POST ' * 3,
@@ -72,6 +74,16 @@ class TestV(TestCase):
             'text': forms.CharField,
         }
 
+    def post_check(self, response, is_post):
+        if not is_post:
+            post_el = response.context.get('page_obj')[0]
+        else:
+            post_el = response.context.get('post')
+        self.assertEqual(post_el.pk, self.post12.pk)
+        self.assertEqual(post_el.text, self.post12.text)
+        self.assertEqual(post_el.author, self.post12.author)
+        self.assertEqual(post_el.group, self.post12.group)
+
     def test_views_templates(self):
 
         for reverse_name, template in self.templates.items():
@@ -82,11 +94,7 @@ class TestV(TestCase):
     def test_views_paginator_and_post_object_index_page(self):
 
         response = self.auth_cl.get(reverse('posts:index'))
-        post_el = response.context.get('page_obj')[0]
-        self.assertEqual(post_el.pk, self.post12.pk)
-        self.assertEqual(post_el.text, self.post12.text)
-        self.assertEqual(post_el.author, self.post12.author)
-        self.assertEqual(post_el.group, self.post12.group)
+        self.post_check(response, False)
 
         self.assertEqual(
             len(response.context['page_obj'].object_list),
@@ -103,11 +111,7 @@ class TestV(TestCase):
                 kwargs={'slug': f'{self.group.slug}'}
             )
         )
-        post_el = response.context.get('page_obj')[0]
-        self.assertEqual(post_el.pk, self.post12.pk)
-        self.assertEqual(post_el.text, self.post12.text)
-        self.assertEqual(post_el.author, self.post12.author)
-        self.assertEqual(post_el.group, self.post12.group)
+        self.post_check(response, False)
 
         self.assertEqual(
             len(response.context['page_obj'].object_list),
@@ -142,11 +146,7 @@ class TestV(TestCase):
                 kwargs={'username': f'{self.user.username}'}
             )
         )
-        post_el = response.context.get('page_obj')[0]
-        self.assertEqual(post_el.pk, self.post12.pk)
-        self.assertEqual(post_el.text, self.post12.text)
-        self.assertEqual(post_el.author, self.post12.author)
-        self.assertEqual(post_el.group, self.post12.group)
+        self.post_check(response, False)
 
         for post in response.context.get('page_obj'):
             self.assertEqual(post.author, self.user)
@@ -172,11 +172,7 @@ class TestV(TestCase):
                 kwargs={'post_id': f'{self.post12.pk}'}
             )
         )
-        post_el = response.context.get('post')
-        self.assertEqual(post_el.pk, self.post12.pk)
-        self.assertEqual(post_el.text, self.post12.text)
-        self.assertEqual(post_el.author, self.post12.author)
-        self.assertEqual(post_el.group, self.post12.group)
+        self.post_check(response, True)
 
     def test_views_create_post_form_fields(self):
 

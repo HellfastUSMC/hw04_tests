@@ -14,7 +14,7 @@ class Post(models.Model):
     )
     pub_date = models.DateTimeField(
         auto_now_add=True,
-        verbose_name='Группа поста',
+        verbose_name='Дата поста',
     )
     author = ForeignKey(
         User,

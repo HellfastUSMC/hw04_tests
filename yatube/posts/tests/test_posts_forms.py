@@ -79,14 +79,31 @@ class TestF(TestCase):
             post_on_index_page.pk
         )
 
-    def test_post_edit(self):
+        count_before_add_anon = Post.objects.count()
+        response = self.client.post(
+            reverse('posts:post_create'),
+            data=post_form,
+            follow=True
+        )
+        count_after_add_anon = Post.objects.count()
+        self.assertEqual(
+            count_before_add_anon,
+            count_after_add_anon,
+            'Post added with anon user!'
+        )
+        self.assertRedirects(
+            response,
+            reverse('users:login') + '?next=' + reverse('posts:post_create')
+        )
 
+    def test_post_edit(self):
+        new_text = 'CHANGED!'
         response = self.cl.post(
             reverse(
                 'posts:post_edition',
                 kwargs={'post_id': f'{self.test_post.pk}'}
             ),
-            data={'text': 'CHANGED!'}, follow=True
+            data={'text': new_text}, follow=True
         )
 
         self.assertRedirects(
@@ -97,21 +114,22 @@ class TestF(TestCase):
             )
         )
         changed_post = Post.objects.get(pk=self.test_post.pk)
-        self.assertEqual('CHANGED!', changed_post.text)
+        self.assertEqual(new_text, changed_post.text)
 
     def test_post_edit_diff_user(self):
 
         local_group = self.group
-
+        check_text = 'Some new text'
         response = self.cl2.post(
             reverse(
                 'posts:post_edition',
                 kwargs={'post_id': f'{self.test_post.pk}'}
             ),
-            data={'text': 'Some new text', 'group': local_group.pk},
+            data={'text': check_text, 'group': local_group.pk},
             follow=True
         )
-        self.assertEqual('TEST EDIT TEXT', self.test_post.text)
+        check_post = Post.objects.latest('pk')
+        self.assertEqual(check_post.text, self.test_post.text)
         self.assertRedirects(
             response,
             reverse(
@@ -125,7 +143,7 @@ class TestF(TestCase):
                 'posts:post_edition',
                 kwargs={'post_id': f'{self.test_post.pk}'}
             ),
-            data={'text': 'Some new text', 'group': local_group.pk},
+            data={'text': check_text, 'group': local_group.pk},
             follow=True
         )
-        self.assertEqual('TEST EDIT TEXT', self.test_post.text)
+        self.assertEqual(check_post.text, self.test_post.text)
