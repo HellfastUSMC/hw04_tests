@@ -114,7 +114,8 @@ def post_edit(request, post_id):
     template = 'posts/create_post.html'
     form = forms.PostForm(
         request.POST or None,
-        instance=post_obj
+        files=request.FILES or None,
+        instance=post_obj,
     )
     context = {
         'is_edit': True,

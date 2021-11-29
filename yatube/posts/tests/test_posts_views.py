@@ -68,6 +68,7 @@ class TestV(TestCase):
         cls.post_form_fields = {
             'group': forms.ModelChoiceField,
             'text': forms.CharField,
+            'image': forms.ImageField,
         }
 
     def post_check(self, response, is_post):
@@ -79,6 +80,7 @@ class TestV(TestCase):
         self.assertEqual(post_el.text, self.post12.text)
         self.assertEqual(post_el.author, self.post12.author)
         self.assertEqual(post_el.group, self.post12.group)
+        self.assertEqual(post_el.image, self.post12.image)
 
     def test_views_templates(self):
 

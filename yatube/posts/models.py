@@ -31,6 +31,17 @@ class Post(models.Model):
         verbose_name='Группа поста',
         help_text='Выберите группу'
     )
+    image = models.ImageField(
+        upload_to='posts/',
+        blank=True,
+        verbose_name='Картинка',
+        help_text='Выберите картинку',
+    )
+
+    class Meta:
+        ordering = ('-pub_date',)
+        verbose_name = 'Пост'
+        verbose_name_plural = 'Посты'
 
     def __str__(self) -> str:
         return self.text[:15]
