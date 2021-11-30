@@ -3,6 +3,7 @@ from django.conf import settings
 from django.contrib.auth import get_user_model
 from django.test import TestCase, Client
 from django.urls import reverse
+from django.core.cache import cache
 
 from ..models import Post, Group
 
@@ -194,3 +195,16 @@ class TestV(TestCase):
                     response.context['form'].fields.get(field),
                     f_type
                 )
+
+    def test_posts_index_page_cache(self):
+        response = self.client.get(reverse('posts:index'))
+        old_last_post_text = response.context['page_obj'].object_list[0].text
+        cache_post = Post.objects.create(
+            author=self.user_2,
+            text='CACHE',
+        )
+        response = self.client.get(reverse('posts:index'))
+        new_last_post_text = response.context['page_obj'].object_list[0].text
+        print(cache.get('index_page'))
+        self.assertEqual(new_last_post_text, old_last_post_text, 'Страница не кэшировалась!')
+        print(response.context['page_obj'].object_list[0])

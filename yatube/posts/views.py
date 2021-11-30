@@ -3,13 +3,14 @@ from django.contrib.auth import get_user_model
 from django.contrib.auth.decorators import login_required
 from django.core.paginator import Paginator
 from django.shortcuts import get_object_or_404, redirect, render
+#from django.views.decorators.cache import cache_page
 
 from . import forms
 from .models import Group, Post
 
 User = get_user_model()
 
-
+#@cache_page(20 index_page)
 def index(request):
     template = 'posts/index.html'
     page_title = 'Главная страница Yatube'
@@ -76,6 +77,8 @@ def post_detail(request, post_id):
     username = post.author.username
     post_author = post.author
     text = post.text
+    comments = post.comments
+    form = form = forms.CommentForm(request.POST or None)
     context = {
         'title': title,
         'author': author,
@@ -86,7 +89,9 @@ def post_detail(request, post_id):
         'text': text,
         'post_id': post_id,
         'post': post,
-        'post_author': post_author
+        'post_author': post_author,
+        'comments': comments,
+        'form': form
     }
     return render(request, template, context)
 
@@ -94,7 +99,7 @@ def post_detail(request, post_id):
 @login_required
 def post_create(request):
     template = 'posts/create_post.html'
-    form = forms.PostForm(request.POST or None)
+    form = forms.PostForm(request.POST or None, request.FILES)
     if not form.is_valid():
         context = {
             'form': form,
@@ -128,3 +133,15 @@ def post_edit(request, post_id):
         return redirect('posts:post_detail', post_id=post_id)
     else:
         return render(request, template, context)
+
+
+@login_required
+def add_comment(request, post_id):
+    post = Post.objects.get(pk=post_id)
+    form = forms.CommentForm(request.POST or None)
+    if form.is_valid():
+        comment = form.save(commit=False)
+        comment.author = request.user
+        comment.post = post
+        comment.save()
+    return redirect('posts:post_detail', post_id=post_id)

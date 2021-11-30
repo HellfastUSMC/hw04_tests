@@ -7,7 +7,7 @@ from django.core.files.uploadedfile import SimpleUploadedFile
 from django.test import TestCase, Client, override_settings
 from django.urls import reverse
 
-from ..models import Post, Group
+from ..models import Comment, Post, Group
 
 TEMP_MEDIA_ROOT = tempfile.mkdtemp(dir=settings.BASE_DIR)
 
@@ -20,36 +20,22 @@ class TestF(TestCase):
     @classmethod
     def setUpClass(cls) -> None:
         super().setUpClass()
-        cls.user = user.objects.create_user(username='VUser')
-        cls.user2 = user.objects.create_user(username='AnotherVUser')
+        cls.user = user.objects.create_user(username='FUser')
+        cls.user2 = user.objects.create_user(username='AnotherFUser')
         cls.group = Group.objects.create(
-            title='VTestGroup',
-            slug='VTG',
-            description='VDESC'
-        )
-        cls.cl = Client()
-        cls.cl.force_login(cls.user)
-        cls.cl2 = Client()
-        cls.cl2.force_login(cls.user2)
-        cls.small_gif = (
-            b'\x47\x49\x46\x38\x39\x61\x02\x00'
-            b'\x01\x00\x80\x00\x00\x00\x00\x00'
-            b'\xFF\xFF\xFF\x21\xF9\x04\x00\x00'
-            b'\x00\x00\x00\x2C\x00\x00\x00\x00'
-            b'\x02\x00\x01\x00\x00\x02\x02\x0C'
-            b'\x0A\x00\x3B'
-        )
-        cls.uploaded = SimpleUploadedFile(
-            name='small.gif',
-            content=cls.small_gif,
-            content_type='image/gif'
+            title='FTestGroup',
+            slug='FTG',
+            description='FDESC'
         )
         cls.test_post = Post.objects.create(
             text='TEST EDIT TEXT',
             group=cls.group,
             author=cls.user,
-            image=cls.uploaded,
         )
+        cls.cl = Client()
+        cls.cl.force_login(cls.user)
+        cls.cl2 = Client()
+        cls.cl2.force_login(cls.user2)
 
     @classmethod
     def tearDownClass(cls):
@@ -60,11 +46,20 @@ class TestF(TestCase):
 
         local_username = self.user.username
         local_group = self.group
-
+        uploaded = SimpleUploadedFile(
+            name='small.gif',
+            content=b'\x47\x49\x46\x38\x39\x61\x02\x00'
+                    b'\x01\x00\x80\x00\x00\x00\x00\x00'
+                    b'\xFF\xFF\xFF\x21\xF9\x04\x00\x00'
+                    b'\x00\x00\x00\x2C\x00\x00\x00\x00'
+                    b'\x02\x00\x01\x00\x00\x02\x02\x0C'
+                    b'\x0A\x00\x3B',
+            content_type='image/gif'
+        )
         post_form = {
             'text': 'TEST ENTRY',
             'group': local_group.pk,
-            'image': self.uploaded,
+            'image': uploaded,
         }
 
         response = self.cl.post(
@@ -73,10 +68,9 @@ class TestF(TestCase):
             follow=True
         )
         post_entry = Post.objects.latest('pk')
-        print(post_entry.image)
         self.assertEqual(post_form['text'], post_entry.text)
         self.assertEqual(local_group, post_entry.group)
-        self.assertEqual(self.uploaded, post_entry.image)
+        self.assertTrue(post_entry.image)
         self.assertRedirects(
             response,
             reverse('posts:profile', kwargs={'username': f'{local_username}'})
@@ -177,3 +171,61 @@ class TestF(TestCase):
             follow=True
         )
         self.assertEqual(check_post.text, self.test_post.text)
+
+    def test_comment_add(self):
+        local_post = self.test_post
+
+        comment_form = {
+            'text': 'TEST COMMENT',
+            'post': local_post,
+        }
+
+        response = self.cl.post(
+            reverse(
+                'posts:add_comment',
+                kwargs={'post_id': f'{local_post.pk}'}
+            ),
+            data=comment_form,
+            follow=True
+        )
+        comm_entry = Comment.objects.latest('pk')
+        self.assertEqual(comment_form['text'], comm_entry.text)
+        self.assertRedirects(
+            response,
+            reverse(
+                'posts:post_detail',
+                kwargs={'post_id': f'{local_post.pk}'}
+            )
+        )
+
+        comm_on_post_page = response.context.get('comments').all()[0]
+        self.assertEqual(
+            comm_entry.pk,
+            comm_on_post_page.pk
+        )
+
+    def test_comment_add_anon(self):
+        local_post = self.test_post
+
+        comment_form = {
+            'text': 'TEST COMMENT',
+            'post': local_post,
+        }
+
+        response = self.client.post(
+            reverse(
+                'posts:add_comment',
+                kwargs={'post_id': f'{local_post.pk}'}
+            ),
+            data=comment_form,
+            follow=True
+        )
+        comm_count = Comment.objects.count()
+        self.assertRedirects(
+            response,
+            reverse('users:login') + '?next=' + reverse(
+                'posts:add_comment',
+                kwargs={'post_id': f'{local_post.pk}'}
+            )
+        )
+        self.assertEqual(comm_count, 0, 'Комментарий добавлен')
