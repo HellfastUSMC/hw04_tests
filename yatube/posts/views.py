@@ -3,14 +3,13 @@ from django.contrib.auth import get_user_model
 from django.contrib.auth.decorators import login_required
 from django.core.paginator import Paginator
 from django.shortcuts import get_object_or_404, redirect, render
-#from django.views.decorators.cache import cache_page
 
 from . import forms
-from .models import Group, Post
+from .models import Following, Group, Post
 
 User = get_user_model()
 
-#@cache_page(20 index_page)
+
 def index(request):
     template = 'posts/index.html'
     page_title = 'Главная страница Yatube'
@@ -56,12 +55,18 @@ def profile(request, username):
     posts_total = posts.count()
     user_name = f'{user_c.first_name} {user_c.last_name}'
     title = f'Профайл пользователя {user_name}'
+    following = False
+    print(request.user.following.filter(), request.user.username)
+    for author in request.user.following.all():
+        if user_c == User.objects.get(username=author):
+            following = True
     context = {
         'title': title,
         'page_obj': page_obj,
         'posts_total': posts_total,
         'user_name': user_name,
-        'author': user_c
+        'author': user_c,
+        'following': following,
     }
     return render(request, template, context)
 
@@ -145,3 +150,37 @@ def add_comment(request, post_id):
         comment.post = post
         comment.save()
     return redirect('posts:post_detail', post_id=post_id)
+
+
+@login_required
+def follow_index(request):
+    template = 'posts/follow.html'
+    page_title = 'Лента подписок'
+    title = 'Лента подписок'
+    posts = Post.objects.order_by('-pub_date').filter(author=request.user)
+    paginator = Paginator(posts, settings.POSTS_ON_PAGE)
+    page_number = request.GET.get('page')
+    page_obj = paginator.get_page(page_number)
+    subs = [author for author in request.user.following.all()]
+    print('!!! -', subs)
+    print(request.user.follower.all(), request.user.following.all(), Following.objects.filter(author))
+    context = {
+        'page_obj': page_obj,
+        'title': title,
+        'page_title': page_title,
+    }
+    return render(request, template, context)
+
+
+@login_required
+def profile_follow(request, username):
+    author = User.objects.get(username=username)
+    Following.objects.create(user=request.user, author=author)
+    return redirect('posts:profile', username=username)
+
+
+@login_required
+def profile_unfollow(request, username):
+    author = User.objects.get(username=username)
+    Following.objects.filter(user=request.user, author=author).delete()
+    return redirect('posts:profile', username=username)

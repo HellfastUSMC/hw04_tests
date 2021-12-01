@@ -1,6 +1,6 @@
 from django.contrib import admin
 
-from .models import Post, Comment
+from .models import Post, Comment, Following
 
 
 class PostAdmin(admin.ModelAdmin):
@@ -35,3 +35,16 @@ class CommentAdmin(admin.ModelAdmin):
 
 
 admin.site.register(Comment, CommentAdmin)
+
+
+class FollowingAdmin(admin.ModelAdmin):
+    list_display = (
+        'pk',
+        'user',
+        'author',
+    )
+    list_editable = ('author',)
+    empty_value_display = '-пусто-'
+
+
+admin.site.register(Following, FollowingAdmin)

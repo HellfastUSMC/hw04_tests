@@ -79,3 +79,25 @@ class Comment(models.Model):
 
     def __str__(self) -> str:
         return self.text[:15]
+
+
+class Following(models.Model):
+    user = ForeignKey(
+        User,
+        on_delete=models.CASCADE,
+        related_name='follower',
+        verbose_name='Подписчик',
+    )
+    author = ForeignKey(
+        User,
+        on_delete=models.CASCADE,
+        related_name='following',
+        verbose_name='Подписан',
+    )
+
+    class Meta:
+        verbose_name = 'Подписка'
+        verbose_name_plural = 'Подписки'
+
+    def __str__(self) -> str:
+        return self.user.username
